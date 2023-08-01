@@ -1,7 +1,5 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.20)
 
 project(AnalogClock)
-find_package(SDL2 REQUIRED)
-include_directories(AnalogClock ${SDL2_INCLUDE_DIRS})
-add_executable(AnalogClock main.cpp AnalogClock.cpp)
-target_link_libraries(AnalogClock ${SDL2_LIBRARIES})
+add_executable(AnalogClock src/main.cpp src/AnalogClock.cpp)
+target_link_libraries(AnalogClock SDL2 SDL2_ttf)
