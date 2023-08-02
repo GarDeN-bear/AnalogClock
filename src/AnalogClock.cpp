@@ -35,16 +35,10 @@ void Window::startLoop()
             if (e.type == SDL_QUIT)
             {
                 quit = true;
+                destroyWindow();
             }
         }
     }
-}
-
-Window::~Window()
-{
-    SDL_FreeSurface(winSurface);
-    SDL_DestroyWindow(win);
-    SDL_Quit();
 }
 
 DigitalClock::DigitalClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Window(_x, _y, _w, _h)
@@ -76,13 +70,6 @@ void DigitalClock::startLoop()
     SDL_Event e;
     while (!quit)
     {
-        while (SDL_PollEvent(&e) != 0)
-        {
-            if (e.type == SDL_QUIT)
-            {
-                quit = true;
-            }
-        }
         SDL_SetRenderDrawColor(rendererTarget, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(rendererTarget);
         auto now = std::chrono::system_clock::now();
@@ -94,15 +81,19 @@ void DigitalClock::startLoop()
         SDL_Rect textRect = {0, 0, textSurface->w, textSurface->h};
         SDL_RenderCopy(rendererTarget, text, NULL, &textRect);
         SDL_RenderPresent(rendererTarget);
+        while (SDL_PollEvent(&e) != 0)
+        {
+            if (e.type == SDL_QUIT)
+            {
+                quit = true;
+                SDL_DestroyTexture(text);
+                TTF_CloseFont(font);
+                SDL_DestroyRenderer(rendererTarget);
+                TTF_Quit();
+                destroyWindow();
+            }
+        }
     }
-}
-
-DigitalClock::~DigitalClock()
-{
-    SDL_DestroyTexture(text);
-    TTF_CloseFont(font);
-    SDL_DestroyRenderer(rendererTarget);
-    TTF_Quit();
 }
 
 AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Window(_x, _y, _w, _h)
@@ -111,11 +102,6 @@ AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Win
 }
 
 void AnalogClock::startLoop()
-{
-
-}
-
-AnalogClock::~AnalogClock()
 {
 
 }
