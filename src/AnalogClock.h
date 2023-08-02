@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
 
 using namespace std::chrono_literals;
 
@@ -50,13 +51,13 @@ private:
     void startLoop() override;
 };
 
-class AnalogClock : Window
+class AnalogClock : public Window
 {
 public:
     AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow = false);
 
 private:
-    SDL_Renderer *rendererTarget = nullptr;
+    SDL_GLContext mainContext;
     SDL_Surface *textSurface = nullptr;
     SDL_Texture *text = nullptr;
     void startLoop() override;

@@ -98,10 +98,39 @@ void DigitalClock::startLoop()
 
 AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Window(_x, _y, _w, _h)
 {
+    hideWindow = _hideWindow;
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    mainContext = SDL_GL_CreateContext(getWindow());
+    if (hideWindow == false)
+    {
+        startLoop();
+    }
 
 }
 
 void AnalogClock::startLoop()
 {
 
+
+    SDL_Color color = {0, 0, 0};
+
+    char buf[9];
+    bool quit = false;
+    SDL_Event e;
+    while (!quit)
+    {
+        glClearColor(255.0f, 255.0f, 255.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(getWindow());
+        while (SDL_PollEvent(&e) != 0)
+        {
+            if (e.type == SDL_QUIT)
+            {
+                quit = true;
+                destroyWindow();
+            }
+        }
+    }
 }
