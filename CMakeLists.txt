@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
-
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED On)
+set(CMAKE_CXX_EXTENSIONS Off)
 project(AnalogClock)
 add_executable(AnalogClock src/main.cpp src/AnalogClock.cpp)
 target_link_libraries(AnalogClock SDL2 SDL2_ttf OpenGL)

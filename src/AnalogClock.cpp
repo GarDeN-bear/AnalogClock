@@ -1,12 +1,11 @@
 #include "AnalogClock.h"
-#include <mutex>
-#include <thread>
-std::mutex m;
-std::mutex m1;
-Window::Window(int _x, int _y, int _w, int _h, bool _hideWindow) : x(_x), y(_y), w(_w), h(_h)
+
+std::mutex mWindow;
+std::mutex mQuit;
+
+Window::Window(int _x, int _y, int _w, int _h) : x(_x), y(_y), w(_w), h(_h)
 {
-    hideWindow = _hideWindow;
-    std::unique_lock ul(m);
+    std::unique_lock ul(mWindow);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         std::cout << "SDL_Init error: " << SDL_GetError() << std::endl;
@@ -22,10 +21,6 @@ Window::Window(int _x, int _y, int _w, int _h, bool _hideWindow) : x(_x), y(_y),
     }
     winSurface = SDL_GetWindowSurface(win);
     ul.unlock();
-    if (hideWindow == false)
-    {
-        startLoop();
-    }
 }
 
 void Window::startLoop()
@@ -46,16 +41,11 @@ void Window::startLoop()
     }
 }
 
-DigitalClock::DigitalClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Window(_x, _y, _w, _h)
+DigitalClock::DigitalClock(int _x, int _y, int _w, int _h) : Window(_x, _y, _w, _h)
 {
-    hideWindow = _hideWindow;
     if (TTF_Init() < 0)
     {
         std::cout << "TTF_Init error: " << TTF_GetError() << std::endl;
-    }
-    if (hideWindow == false)
-    {
-        startLoop();
     }
 }
 
@@ -102,9 +92,9 @@ void DigitalClock::startLoop()
     }
 }
 
-AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Window(_x, _y, _w, _h)
+AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, timeZone _currentTZ) : Window(_x, _y, _w, _h)
 {
-    hideWindow = _hideWindow;
+    currentTZ = _currentTZ;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -112,11 +102,6 @@ AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow) : Win
     if (mainContext == nullptr)
     {
         std::cout << "SDL_GL_CreateContext error: " << glGetError() << std::endl;
-    }
-    glViewport(0, 0, w, h);
-    if (hideWindow == false)
-    {
-        startLoop();
     }
 }
 
@@ -130,7 +115,6 @@ void AnalogClock::startLoop()
         glClear(GL_COLOR_BUFFER_BIT);
         drawClock();
         SDL_GL_SwapWindow(win);
-        // std::cout << hours << ":" << minutes << ":" << seconds << std::endl;
         while (SDL_PollEvent(&e) != 0)
         {
             if (e.type == SDL_QUIT)
@@ -149,102 +133,131 @@ void AnalogClock::drawClock()
     auto now = std::chrono::system_clock::now();
     std::time_t currectTime = std::chrono::system_clock::to_time_t(now);
     std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&currectTime));
-    int hours = static_cast<int>(buf[0] - 48) * 10 + static_cast<int>(buf[1] - 48);
+    int hours = static_cast<int>(buf[0] - 48) * 10 + static_cast<int>(buf[1] - 48) - static_cast<int>(currentTZ) + static_cast<int>(tZ);
+    if (hours > 24)
+    {
+        hours -= 24;
+    }
     int minutes = static_cast<int>(buf[3] - 48) * 10 + static_cast<int>(buf[4] - 48);
     int seconds = static_cast<int>(buf[6] - 48) * 10 + static_cast<int>(buf[7] - 48);
-    drawCircle();
-    drawPoint();
-    drawHourHand(hours);
-    drawMinuteHand(minutes);
-    drawSecondHand(seconds);
+    float cx = 0.0f, cy = 0.0f;
+    drawCircle(cx, cy);
+    drawPoint(cx, cy);
+    drawHourHand(cx, cy, hours);
+    drawMinuteHand(cx, cy, minutes);
+    drawSecondHand(cx, cy, seconds);
 }
 
-void AnalogClock::drawPoint()
+void AnalogClock::drawPoint(const float &cx, const float &cy)
 {
     glEnable(GL_POINT_SMOOTH);
     glPointSize(50);
     glBegin(GL_POINTS);
     glColor3f(0.0f, 0.0f, 0.0f);
-    glVertex2f(0.0f, 0.0f);
+    glVertex2f(convertGLfX(cx), convertGLfY(cy));
     glEnd();
 }
 
-void AnalogClock::drawCircle()
+void AnalogClock::drawCircle(const float &cx, const float &cy)
 {
-    float cx = 0.0f, cy = 0.0f;
-    int numSegments = 100;
-    glBegin(GL_TRIANGLE_FAN);
+    int numSegments = 60;
+    glLineWidth(20);
+    glBegin(GL_LINE_LOOP);
     glColor3f(0.0f, 0.0f, 0.0f);
-    glVertex2f(cx, cy);
     for (int i = 0; i <= numSegments; i++)
     {
-        float theta = 2.0f * M_PI * float(i) / float(numSegments); 
-        float x = clockRadious * cosf(theta);                      
-        float y = clockRadious * sinf(theta);                      
-        glVertex2f(1.0f / w * (cx + x), 1.0f / h * (cy + y));      
+        float theta = 2.0f * M_PI * float(i) / float(numSegments);
+        float x = clockRadious * cosf(theta);
+        float y = clockRadious * sinf(theta);
+        glVertex2f(convertGLfX(x), convertGLfY(y));
     }
     glEnd();
-    glBegin(GL_TRIANGLE_FAN);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex2f(cx, cy);
     for (int i = 0; i <= numSegments; i++)
     {
-        float theta = 2.0f * M_PI * float(i) / float(numSegments); 
-        float x = (clockRadious - 20) * cosf(theta);               
-        float y = (clockRadious - 20) * sinf(theta);               
-        glVertex2f(1.0f / w * (cx + x), 1.0f / h * (cy + y));      
+        float theta = 2.0f * M_PI * float(i) / float(numSegments);
+        glLineWidth(20);
+        glBegin(GL_LINES);
+        glColor3f(0.0f, 0.0f, 0.0f);
+        float x1 = clockRadious * cosf(theta);
+        float y1 = clockRadious * sinf(theta);
+        glVertex2f(convertGLfX(cx + x1), convertGLfY(cy + y1));
+        float x2, y2;
+        if (i % 5 == 0)
+        {
+            x2 = (clockRadious - 80) * cosf(theta);
+            y2 = (clockRadious - 80) * sinf(theta);
+        }
+        else
+        {
+            x2 = (clockRadious - 40) * cosf(theta);
+            y2 = (clockRadious - 40) * sinf(theta);
+        }
+        glVertex2f(convertGLfX(cx + x2), convertGLfY(cy + y2));
+        glEnd();
     }
-    glEnd();
 }
 
-void AnalogClock::drawHourHand(const int &hours)
+void AnalogClock::drawHourHand(const float &cx, const float &cy, const int &hours)
 {
-    float cx = 0.0f, cy = 0.0f;
-    float endX, endY;
+    float x, y;
     int oneDivision = 360 / 12;
     glLineWidth(10);
     glBegin(GL_LINES);
     glColor3f(1.0f, 0.0f, 0.0f);
-    glVertex2f(cx, cy);
+    glVertex2f(convertGLfX(cx), convertGLfY(cy));
     float theta = (oneDivision * hours) * M_PI / 180;
     if (hours > 12)
     {
         float theta = (oneDivision * (hours - 12)) * M_PI / 180;
     }
-    endX = hourHandLength * cos(theta - M_PI / 2) + cx;
-    endY = hourHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(1.0f / w * endX, 1.0f / h * endY);
+    x = hourHandLength * cos(theta - M_PI / 2) + cx;
+    y = hourHandLength * sin(theta + M_PI / 2) + cy;
+    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
     glEnd();
 }
 
-void AnalogClock::drawMinuteHand(const int &minutes)
+void AnalogClock::drawMinuteHand(const float &cx, const float &cy, const int &minutes)
 {
-    float cx = 0.0f, cy = 0.0f;
-    float endX, endY;
+    float x, y;
     int oneDivision = 360 / 60;
     glLineWidth(10);
     glBegin(GL_LINES);
     glColor3f(0.0f, 1.0f, 0.0f);
-    glVertex2f(cx, cy);
+    glVertex2f(convertGLfX(cx), convertGLfY(cy));
     float theta = (oneDivision * minutes) * M_PI / 180;
-    endX = minuteHandLength * cos(theta - M_PI / 2) + cx;
-    endY = minuteHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(1.0f / w * endX, 1.0f / h * endY);
+    x = minuteHandLength * cos(theta - M_PI / 2) + cx;
+    y = minuteHandLength * sin(theta + M_PI / 2) + cy;
+    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
     glEnd();
 }
 
-void AnalogClock::drawSecondHand(const int &seconds)
+void AnalogClock::drawSecondHand(const float &cx, const float &cy, const int &seconds)
 {
-    float cx = 0.0f, cy = 0.0f;
-    float endX, endY;
+    float x, y;
     glLineWidth(10);
     int oneDivision = 360 / 60;
     glBegin(GL_LINES);
     glColor3f(0.0f, 0.0f, 1.0f);
-    glVertex2f(cx, cy);
+    glVertex2f(convertGLfX(cx), convertGLfY(cy));
     float theta = (oneDivision * seconds) * M_PI / 180;
-    endX = secondHandLength * cos(theta - M_PI / 2) + cx;
-    endY = secondHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(1.0f / w * endX, 1.0f / h * endY);
+    x = secondHandLength * cos(theta - M_PI / 2) + cx;
+    y = secondHandLength * sin(theta + M_PI / 2) + cy;
+    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
     glEnd();
 }
+
+float AnalogClock::convertGLfX(float valX)
+{
+    return 1.0f / w * valX;
+}
+
+float AnalogClock::convertGLfY(float valY)
+{
+    return 1.0f / h * valY;
+}
+
+void AnalogClock::setTimeZone(timeZone _tZ)
+{
+    tZ = _tZ;
+}
+
