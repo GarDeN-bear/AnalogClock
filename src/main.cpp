@@ -1,23 +1,53 @@
 #include "AnalogClock.h"
 
+std::string chooseTimeZone(timeZone tZ)
+{
+    switch (tZ)
+    {
+    case (timeZone::London):
+        return "London";
+        break;
+    case (timeZone::Paris):
+        return "Paris";
+        break;
+    case (timeZone::Moscow):
+        return "Moscow";
+        break;
+    case (timeZone::Tokyo):
+        return "Tokyo";
+        break;
+    case (timeZone::Sydney):
+        return "Sydney";
+        break;
+    case (timeZone::NewYork):
+        return "NewYork";
+        break;
+    default:
+        return "0";
+    }
+}
+
 int main()
 {
-    std::thread t1([]()
-                   {
-                       AnalogClock w1(SDL_WINDOWPOS_CENTERED_MASK,
+    std::vector<std::thread> vThreads;
+    std::vector<timeZone> vTZ{timeZone::London,
+                              timeZone::Paris,
+                              timeZone::Moscow,
+                              timeZone::Tokyo,
+                              timeZone::Sydney,
+                              timeZone::NewYork};
+    for (const auto &el : vTZ)
+    {
+        vThreads.push_back(std::thread([&el](){
+                       AnalogClock w(SDL_WINDOWPOS_CENTERED_MASK,
                                       SDL_WINDOWPOS_CENTERED_MASK,
-                                      1920, 1080);
-                       w1.startLoop();
-                   });
-    // std::thread t2([]()
-    //                {
-    //                    AnalogClock w2(SDL_WINDOWPOS_CENTERED_MASK,
-    //                                   SDL_WINDOWPOS_CENTERED_MASK,
-    //                                   1920, 1080);
-    //                    w2.startLoop();
-    //                });
-    t1.join();
-    // t2.join();
-
+                                      850, 850, chooseTimeZone(el));
+                    w.setTimeZone(el);
+                    w.startLoop(); }));
+    }
+    for (int i = 0; i < vTZ.size(); ++i)
+    {
+        vThreads.at(i).join();
+    }
     return 0;
 }

@@ -3,15 +3,16 @@
 std::mutex mWindow;
 std::mutex mQuit;
 
-Window::Window(int _x, int _y, int _w, int _h) : x(_x), y(_y), w(_w), h(_h)
+Window::Window(int _x, int _y, int _w, int _h, std::string _text) : x(_x), y(_y), w(_w), h(_h)
 {
+    text = _text;
     std::unique_lock ul(mWindow);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         std::cout << "SDL_Init error: " << SDL_GetError() << std::endl;
     }
 
-    win = SDL_CreateWindow("Analog Clock",
+    win = SDL_CreateWindow(text.c_str(),
                            x, y,
                            w, h,
                            SDL_WINDOW_OPENGL);
@@ -92,9 +93,10 @@ void DigitalClock::startLoop()
     }
 }
 
-AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, timeZone _currentTZ) : Window(_x, _y, _w, _h)
+AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ) : Window(_x, _y, _w, _h, _text)
 {
     currentTZ = _currentTZ;
+    tZ = _currentTZ;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

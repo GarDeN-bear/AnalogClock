@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <vector>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -10,6 +11,8 @@
 
 #include <mutex>
 #include <thread>
+
+using namespace std::chrono_literals;
 
 enum class timeZone
 {
@@ -21,12 +24,10 @@ enum class timeZone
     NewYork = 19
 };
 
-using namespace std::chrono_literals;
-
 class Window
 {
 public:
-    Window(int _x, int _y, int _w, int _h);
+    Window(int _x, int _y, int _w, int _h, std::string _text = "Window");
     virtual void startLoop();
 
 protected:
@@ -36,6 +37,7 @@ protected:
     const int h;
     SDL_Window *win = nullptr;
     SDL_Surface *winSurface = nullptr;
+    std::string text;
     void destroyWindow()
     {
         SDL_FreeSurface(winSurface);
@@ -60,7 +62,7 @@ private:
 class AnalogClock : public Window
 {
 public:
-    AnalogClock(int _x, int _y, int _w, int _h, timeZone _currentTZ = timeZone::Moscow);
+    AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ = timeZone::Moscow);
     void startLoop() override;
     void setTimeZone(timeZone _tZ);
 
@@ -69,7 +71,7 @@ private:
     float hourHandLength = 300.f;
     float minuteHandLength = 400.f;
     float secondHandLength = 600.f;
-    timeZone tZ = timeZone::Moscow;
+    timeZone tZ;
     timeZone currentTZ;
     SDL_GLContext mainContext = nullptr;
     void drawCircle(const float &cx, const float &cy);
