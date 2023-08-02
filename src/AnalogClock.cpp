@@ -162,6 +162,7 @@ void AnalogClock::drawCircle(const float &cx, const float &cy)
 {
     int numSegments = 60;
     glLineWidth(20);
+    glEnable(GL_LINE_SMOOTH);
     glBegin(GL_LINE_LOOP);
     glColor3f(0.0f, 0.0f, 0.0f);
     for (int i = 0; i <= numSegments; i++)
@@ -202,6 +203,7 @@ void AnalogClock::drawHourHand(const float &cx, const float &cy, const int &hour
     float x, y;
     int oneDivision = 360 / 12;
     glLineWidth(10);
+    glEnable(GL_LINE_SMOOTH);
     glBegin(GL_LINES);
     glColor3f(1.0f, 0.0f, 0.0f);
     glVertex2f(convertGLfX(cx), convertGLfY(cy));
@@ -221,6 +223,7 @@ void AnalogClock::drawMinuteHand(const float &cx, const float &cy, const int &mi
     float x, y;
     int oneDivision = 360 / 60;
     glLineWidth(10);
+    glEnable(GL_LINE_SMOOTH);
     glBegin(GL_LINES);
     glColor3f(0.0f, 1.0f, 0.0f);
     glVertex2f(convertGLfX(cx), convertGLfY(cy));
@@ -236,6 +239,7 @@ void AnalogClock::drawSecondHand(const float &cx, const float &cy, const int &se
     float x, y;
     glLineWidth(10);
     int oneDivision = 360 / 60;
+    glEnable(GL_LINE_SMOOTH);
     glBegin(GL_LINES);
     glColor3f(0.0f, 0.0f, 1.0f);
     glVertex2f(convertGLfX(cx), convertGLfY(cy));
@@ -260,4 +264,3 @@ void AnalogClock::setTimeZone(timeZone _tZ)
 {
     tZ = _tZ;
 }
-
