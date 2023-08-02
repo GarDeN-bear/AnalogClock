@@ -14,22 +14,15 @@ class Window
 {
 public:
     Window(int _x, int _y, int _w, int _h, bool _hideWindow = true);
-
-private:
+protected:
     const int x;
     const int y;
     const int w;
     const int h;
-
-protected:
     SDL_Window *win = nullptr;
     SDL_Surface *winSurface = nullptr;
     bool hideWindow;
     virtual void startLoop();
-    SDL_Window *getWindow()
-    {
-        return win;
-    }
     void destroyWindow()
     {
         SDL_FreeSurface(winSurface);
@@ -57,8 +50,17 @@ public:
     AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow = false);
 
 private:
-    SDL_GLContext mainContext;
-    SDL_Surface *textSurface = nullptr;
-    SDL_Texture *text = nullptr;
+    float clockRadious = 800.f;
+    float hourHandLength = 600.f; 
+    float minuteHandLength = 400.f; 
+    float secondHandLength = 300.f; 
+    SDL_GLContext mainContext = nullptr;
     void startLoop() override;
+    void drawCircle();
+    void drawPoint();
+    void drawClock();
+    void drawHourHand(const int& hours);
+    void drawMinuteHand(const int& minutes);
+    void drawSecondHand(const int& seconds);
+    
 };
