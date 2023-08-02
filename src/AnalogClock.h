@@ -68,10 +68,10 @@ public:
     void setTimeZone(timeZone _tZ);
 
 private:
-    float clockRadious = 800.f;
-    float hourHandLength = 300.f;
-    float minuteHandLength = 400.f;
-    float secondHandLength = 600.f;
+    float clockRadious = 400.f;
+    float hourHandLength = 100.f;
+    float minuteHandLength = 200.f;
+    float secondHandLength = 300.f;
     timeZone tZ;
     timeZone currentTZ;
     SDL_GLContext mainContext = nullptr;

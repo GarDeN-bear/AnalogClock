@@ -48,7 +48,7 @@ int main()
                                        {
                        AnalogClock w(SDL_WINDOWPOS_CENTERED_MASK,
                                       SDL_WINDOWPOS_CENTERED_MASK,
-                                      850, 850, chooseTimeZone(el));
+                                      450, 450, chooseTimeZone(el));
                     w.setTimeZone(el);
                     w.startLoop(); }));
     }
