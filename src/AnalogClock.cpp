@@ -3,15 +3,16 @@
 std::mutex mWindow;
 std::mutex mQuit;
 
-Window::Window(int _x, int _y, int _w, int _h) : x(_x), y(_y), w(_w), h(_h)
+Window::Window(int _x, int _y, int _w, int _h, std::string _text) : x(_x), y(_y), w(_w), h(_h)
 {
+    text = _text;
     std::unique_lock ul(mWindow);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         std::cout << "SDL_Init error: " << SDL_GetError() << std::endl;
     }
 
-    win = SDL_CreateWindow("Analog Clock",
+    win = SDL_CreateWindow(text.c_str(),
                            x, y,
                            w, h,
                            SDL_WINDOW_OPENGL);
@@ -41,7 +42,7 @@ void Window::startLoop()
     }
 }
 
-DigitalClock::DigitalClock(int _x, int _y, int _w, int _h) : Window(_x, _y, _w, _h)
+DigitalClock::DigitalClock(int _x, int _y, int _w, int _h, std::string _text) : Window(_x, _y, _w, _h, _text)
 {
     if (TTF_Init() < 0)
     {
@@ -92,9 +93,10 @@ void DigitalClock::startLoop()
     }
 }
 
-AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, timeZone _currentTZ) : Window(_x, _y, _w, _h)
+AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ) : Window(_x, _y, _w, _h, _text)
 {
     currentTZ = _currentTZ;
+    tZ = _currentTZ;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -185,8 +187,8 @@ void AnalogClock::drawCircle(const float &cx, const float &cy)
         float x2, y2;
         if (i % 5 == 0)
         {
-            x2 = (clockRadious - 80) * cosf(theta);
-            y2 = (clockRadious - 80) * sinf(theta);
+            x2 = (clockRadious - 100) * cosf(theta);
+            y2 = (clockRadious - 100) * sinf(theta);
         }
         else
         {

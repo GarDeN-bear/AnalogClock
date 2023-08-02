@@ -10,6 +10,7 @@
 
 #include <mutex>
 #include <thread>
+#include <vector>
 
 enum class timeZone
 {
@@ -26,7 +27,7 @@ using namespace std::chrono_literals;
 class Window
 {
 public:
-    Window(int _x, int _y, int _w, int _h);
+    Window(int _x, int _y, int _w, int _h, std::string _text);
     virtual void startLoop();
 
 protected:
@@ -34,6 +35,7 @@ protected:
     const int y;
     const int w;
     const int h;
+    std::string text;
     SDL_Window *win = nullptr;
     SDL_Surface *winSurface = nullptr;
     void destroyWindow()
@@ -47,7 +49,7 @@ protected:
 class DigitalClock : public Window
 {
 public:
-    DigitalClock(int _x, int _y, int _w, int _h);
+    DigitalClock(int _x, int _y, int _w, int _h, std::string _text);
     void startLoop() override;
 
 private:
@@ -60,7 +62,7 @@ private:
 class AnalogClock : public Window
 {
 public:
-    AnalogClock(int _x, int _y, int _w, int _h, timeZone _currentTZ = timeZone::Moscow);
+    AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ = timeZone::Moscow);
     void startLoop() override;
     void setTimeZone(timeZone _tZ);
 
