@@ -8,23 +8,52 @@
 
 using namespace std::chrono_literals;
 
-class AnalogClock
+class Window
 {
 public:
-    AnalogClock(int _x, int _y, int _w, int _h);
-    ~AnalogClock();
+    Window(int _x, int _y, int _w, int _h, bool _hideWindow = true);
+    ~Window();
 
 private:
-    SDL_Window *win = nullptr;
-    SDL_Surface *winSurface = nullptr;
     const int x;
     const int y;
     const int w;
     const int h;
 
-    SDL_Texture *text = nullptr;
-    TTF_Font * font = nullptr;
-    SDL_Renderer* renderTarget = nullptr;
+protected:
+    SDL_Window *win = nullptr;
+    SDL_Surface *winSurface = nullptr;
+    bool hideWindow;
+    virtual void startLoop();
+    SDL_Window *getWindow()
+    {
+        return win;
+    }
+};
+
+class DigitalClock : public Window
+{
+public:
+    DigitalClock(int _x, int _y, int _w, int _h, bool _hideWindow = false);
+    ~DigitalClock();
+
+private:
+    SDL_Renderer *rendererTarget = nullptr;
     SDL_Surface *textSurface = nullptr;
-    
+    SDL_Texture *text = nullptr;
+    TTF_Font *font = nullptr;
+    void startLoop() override;
+};
+
+class AnalogClock : Window
+{
+public:
+    AnalogClock(int _x, int _y, int _w, int _h, bool _hideWindow = false);
+    ~AnalogClock();
+
+private:
+    SDL_Renderer *rendererTarget = nullptr;
+    SDL_Surface *textSurface = nullptr;
+    SDL_Texture *text = nullptr;
+    void startLoop() override;
 };
