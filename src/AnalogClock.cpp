@@ -1,12 +1,35 @@
 #include "AnalogClock.h"
 
-std::mutex mWindow;
-std::mutex mQuit;
+std::string chooseTimeZone(timeZone tZ)
+{
+    switch (tZ)
+    {
+    case (timeZone::London):
+        return "London";
+        break;
+    case (timeZone::Paris):
+        return "Paris";
+        break;
+    case (timeZone::Moscow):
+        return "Moscow";
+        break;
+    case (timeZone::Tokyo):
+        return "Tokyo";
+        break;
+    case (timeZone::Sydney):
+        return "Sydney";
+        break;
+    case (timeZone::NewYork):
+        return "NewYork";
+        break;
+    default:
+        return "0";
+    }
+}
 
 Window::Window(int _x, int _y, int _w, int _h, std::string _text) : x(_x), y(_y), w(_w), h(_h)
 {
     text = _text;
-    std::unique_lock ul(mWindow);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
         std::cout << "SDL_Init error: " << SDL_GetError() << std::endl;
@@ -21,7 +44,6 @@ Window::Window(int _x, int _y, int _w, int _h, std::string _text) : x(_x), y(_y)
         std::cout << "SDL_CreateWindow error: " << SDL_GetError() << std::endl;
     }
     winSurface = SDL_GetWindowSurface(win);
-    ul.unlock();
 }
 
 void Window::startLoop()
@@ -129,6 +151,28 @@ void AnalogClock::startLoop()
     }
 }
 
+void AnalogClock::startLoop(const std::vector<timeZone> &timeZones)
+{
+    bool quit = false;
+    SDL_Event e;
+    while (!quit)
+    {
+        glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        drawClock(timeZones);
+        SDL_GL_SwapWindow(win);
+        while (SDL_PollEvent(&e) != 0)
+        {
+            if (e.type == SDL_QUIT)
+            {
+                quit = true;
+                SDL_GL_DeleteContext(mainContext);
+                destroyWindow();
+            }
+        }
+    }
+}
+
 void AnalogClock::drawClock()
 {
     char buf[9];
@@ -148,6 +192,32 @@ void AnalogClock::drawClock()
     drawHourHand(cx, cy, hours);
     drawMinuteHand(cx, cy, minutes);
     drawSecondHand(cx, cy, seconds);
+}
+
+void AnalogClock::drawClock(std::vector<timeZone> timeZones)
+{
+    char buf[9];
+    auto now = std::chrono::system_clock::now();
+    std::time_t currectTime = std::chrono::system_clock::to_time_t(now);
+    std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&currectTime));
+    for (int i = 0; i < timeZones.size(); ++i)
+    {
+        tZ = timeZones.at(i);
+        int hours = static_cast<int>(buf[0] - 48) * 10 + static_cast<int>(buf[1] - 48) - static_cast<int>(currentTZ) + static_cast<int>(tZ);
+        if (hours > 24)
+        {
+            hours -= 24;
+        }
+        int minutes = static_cast<int>(buf[3] - 48) * 10 + static_cast<int>(buf[4] - 48);
+        int seconds = static_cast<int>(buf[6] - 48) * 10 + static_cast<int>(buf[7] - 48);
+        float cx = cXPositions.at(i);
+        float cy = cYPositions.at(i);
+        drawCircle(cx, cy);
+        drawPoint(cx, cy);
+        drawHourHand(cx, cy, hours);
+        drawMinuteHand(cx, cy, minutes);
+        drawSecondHand(cx, cy, seconds);
+    }
 }
 
 void AnalogClock::drawPoint(const float &cx, const float &cy)
@@ -170,8 +240,8 @@ void AnalogClock::drawCircle(const float &cx, const float &cy)
     for (int i = 0; i <= numSegments; i++)
     {
         float theta = 2.0f * M_PI * float(i) / float(numSegments);
-        float x = clockRadious * cosf(theta);
-        float y = clockRadious * sinf(theta);
+        float x = clockRadious * cosf(theta) + cx;
+        float y = clockRadious * sinf(theta) + cy;
         glVertex2f(convertGLfX(x), convertGLfY(y));
     }
     glEnd();
@@ -216,7 +286,7 @@ void AnalogClock::drawHourHand(const float &cx, const float &cy, const int &hour
     }
     x = hourHandLength * cos(theta - M_PI / 2) + cx;
     y = hourHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
+    glVertex2f(convertGLfX(x), convertGLfY(y));
     glEnd();
 }
 
@@ -232,7 +302,7 @@ void AnalogClock::drawMinuteHand(const float &cx, const float &cy, const int &mi
     float theta = (oneDivision * minutes) * M_PI / 180;
     x = minuteHandLength * cos(theta - M_PI / 2) + cx;
     y = minuteHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
+    glVertex2f(convertGLfX(x), convertGLfY(y));
     glEnd();
 }
 
@@ -248,7 +318,7 @@ void AnalogClock::drawSecondHand(const float &cx, const float &cy, const int &se
     float theta = (oneDivision * seconds) * M_PI / 180;
     x = secondHandLength * cos(theta - M_PI / 2) + cx;
     y = secondHandLength * sin(theta + M_PI / 2) + cy;
-    glVertex2f(convertGLfX(cx + x), convertGLfY(cy + y));
+    glVertex2f(convertGLfX(x), convertGLfY(y));
     glEnd();
 }
 

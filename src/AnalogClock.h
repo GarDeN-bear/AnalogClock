@@ -25,6 +25,9 @@ enum class timeZone
     NewYork = 19
 };
 
+
+std::string chooseTimeZone(timeZone tZ);
+
 class Window
 {
 public:
@@ -65,6 +68,7 @@ class AnalogClock : public Window
 public:
     AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ = timeZone::Moscow);
     void startLoop() override;
+    void startLoop(const std::vector<timeZone>& timeZones);
     void setTimeZone(timeZone _tZ);
 
 private:
@@ -72,12 +76,15 @@ private:
     float hourHandLength = 100.f;
     float minuteHandLength = 200.f;
     float secondHandLength = 300.f;
+    std::vector<float> cXPositions {-900, 0, 900, -900, 0, 900};
+    std::vector<float> cYPositions {600, 600, 600, -600, -600, -600};
     timeZone tZ;
     timeZone currentTZ;
     SDL_GLContext mainContext = nullptr;
     void drawCircle(const float &cx, const float &cy);
     void drawPoint(const float &cx, const float &cy);
     void drawClock();
+    void drawClock(std::vector<timeZone> timeZones);
     void drawHourHand(const float &cx, const float &cy, const int &hours);
     void drawMinuteHand(const float &cx, const float &cy, const int &minutes);
     void drawSecondHand(const float &cx, const float &cy, const int &seconds);
