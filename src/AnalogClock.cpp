@@ -115,10 +115,9 @@ void DigitalClock::startLoop()
     }
 }
 
-AnalogClock::AnalogClock(int _x, int _y, int _w, int _h, std::string _text, timeZone _currentTZ) : Window(_x, _y, _w, _h, _text)
+AnalogClock::AnalogClock(const int _x, const int _y, const int _w, const int _h, const std::string _text, const timeZone _currentTZ) : Window(_x, _y, _w, _h, _text)
 {
     currentTZ = _currentTZ;
-    tZ = _currentTZ;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -151,50 +150,7 @@ void AnalogClock::startLoop()
     }
 }
 
-void AnalogClock::startLoop(const std::vector<timeZone> &timeZones)
-{
-    bool quit = false;
-    SDL_Event e;
-    while (!quit)
-    {
-        glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        drawClock(timeZones);
-        SDL_GL_SwapWindow(win);
-        while (SDL_PollEvent(&e) != 0)
-        {
-            if (e.type == SDL_QUIT)
-            {
-                quit = true;
-                SDL_GL_DeleteContext(mainContext);
-                destroyWindow();
-            }
-        }
-    }
-}
-
 void AnalogClock::drawClock()
-{
-    char buf[9];
-    auto now = std::chrono::system_clock::now();
-    std::time_t currectTime = std::chrono::system_clock::to_time_t(now);
-    std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&currectTime));
-    int hours = static_cast<int>(buf[0] - 48) * 10 + static_cast<int>(buf[1] - 48) - static_cast<int>(currentTZ) + static_cast<int>(tZ);
-    if (hours > 24)
-    {
-        hours -= 24;
-    }
-    int minutes = static_cast<int>(buf[3] - 48) * 10 + static_cast<int>(buf[4] - 48);
-    int seconds = static_cast<int>(buf[6] - 48) * 10 + static_cast<int>(buf[7] - 48);
-    float cx = 0.0f, cy = 0.0f;
-    drawCircle(cx, cy);
-    drawPoint(cx, cy);
-    drawHourHand(cx, cy, hours);
-    drawMinuteHand(cx, cy, minutes);
-    drawSecondHand(cx, cy, seconds);
-}
-
-void AnalogClock::drawClock(std::vector<timeZone> timeZones)
 {
     char buf[9];
     auto now = std::chrono::system_clock::now();
@@ -202,7 +158,7 @@ void AnalogClock::drawClock(std::vector<timeZone> timeZones)
     std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&currectTime));
     for (int i = 0; i < timeZones.size(); ++i)
     {
-        tZ = timeZones.at(i);
+        timeZone tZ = timeZones.at(i);
         int hours = static_cast<int>(buf[0] - 48) * 10 + static_cast<int>(buf[1] - 48) - static_cast<int>(currentTZ) + static_cast<int>(tZ);
         if (hours > 24)
         {
@@ -322,17 +278,31 @@ void AnalogClock::drawSecondHand(const float &cx, const float &cy, const int &se
     glEnd();
 }
 
-float AnalogClock::convertGLfX(float valX)
+float AnalogClock::convertGLfX(const float &valX)
 {
     return 1.0f / w * valX;
 }
 
-float AnalogClock::convertGLfY(float valY)
+float AnalogClock::convertGLfY(const float &valY)
 {
     return 1.0f / h * valY;
 }
 
-void AnalogClock::setTimeZone(timeZone _tZ)
+void AnalogClock::setTimeZone(const std::vector<timeZone> &_timeZones)
 {
-    tZ = _tZ;
+    timeZones = _timeZones;
+}
+
+void AnalogClock::setPositions(const std::vector<float> &_cXPositions, const std::vector<float> &_cYPositions)
+{
+    cXPositions = _cXPositions;
+    cYPositions = _cYPositions;
+}
+
+void AnalogClock::setCloclAttributes(const float &_clockRadious, const float &_hourHandLength, const float &_minuteHandLength, const float &_secondHandLength)
+{
+    clockRadious = _clockRadious;
+    hourHandLength = _hourHandLength;
+    minuteHandLength = _minuteHandLength;
+    secondHandLength = _secondHandLength;
 }
